@@ -2,12 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { --navy:#062B4F; --sky:#49B8F3; --orange:#FF8A3D; }
+:root { --navy:#0B1F3A; --sky:#2F80ED; --orange:#F2994A; }
 * { box-sizing: border-box; }
 html { scroll-behavior:smooth; }
-body { margin:0; background:#f5f9fc; color:#102a43; font-family: Arial, Helvetica, sans-serif; }
-.grid-pattern { background-image: linear-gradient(rgba(73,184,243,.09) 1px, transparent 1px), linear-gradient(90deg, rgba(73,184,243,.09) 1px, transparent 1px); background-size:34px 34px; }
+body { margin:0; background:#F8FAFC; color:#102a43; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+h1,h2,h3,h4 { font-family: "Space Grotesk", Inter, ui-sans-serif, sans-serif; }
+.grid-pattern { background-image: linear-gradient(rgba(47,128,237,.075) 1px, transparent 1px), linear-gradient(90deg, rgba(47,128,237,.075) 1px, transparent 1px); background-size:34px 34px; }
 .glass { background:rgba(255,255,255,.72); backdrop-filter: blur(16px); border:1px solid rgba(255,255,255,.8); }
 .container-box { aspect-ratio:1; border-radius:3px; }
 .ship-hull { clip-path: polygon(0 0,100% 0,88% 100%,13% 100%); }
+.isometric-side { clip-path: polygon(0 0, 100% 22%, 100% 100%, 0 78%); }
+.isometric-top { clip-path: polygon(0 0, 88% 0, 100% 22%, 12% 22%); }
+.soft-orb { filter: blur(1px); }
+@keyframes drift { from { transform:translateX(-10px) } 50% { transform:translateX(12px) } to { transform:translateX(-10px) } }
+@keyframes wave { from { transform:translateX(0) } to { transform:translateX(-54px) } }
+.cloud-drift { animation:drift 10s ease-in-out infinite; }
+.wave-flow { animation:wave 5s linear infinite; }
 @media (prefers-color-scheme: dark) { body { background:#071d31; color:#e8f4fb; } }
