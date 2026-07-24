@@ -14,7 +14,7 @@ const nav: { label: DashboardTab; icon: typeof LayoutDashboard }[] = [
   { label: "Messages", icon: MessageCircle },
 ];
 
-export function AppShell({ role, children }: { role: Role; children: ReactNode | ((tab: DashboardTab) => ReactNode) }) {
+export function AppShell({ role, children }: { role: Role; children: ReactNode | ((tab: DashboardTab, selectTab: (tab: DashboardTab) => void) => ReactNode) }) {
   const label = role === "provider" ? "Provider Portal" : role === "admin" ? "Admin Console" : "Trader Dashboard";
   const [active, setActive] = useState<DashboardTab>("Overview");
   const [chat, setChat] = useState(false);
@@ -43,7 +43,7 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode |
     }
   };
 
-  const content = typeof children === "function" ? children(active) : children;
+  const content = typeof children === "function" ? children(active, selectTab) : children;
 
   return <div className="min-h-screen bg-[#f5f9fc] text-ink">
     <aside className="fixed inset-y-0 hidden w-64 flex-col border-r border-slate-200 bg-white px-5 py-7 lg:flex">
