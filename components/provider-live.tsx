@@ -32,7 +32,8 @@ export function ProviderLive() {
     try {
       const supabase = getSupabaseBrowserClient();
       const provider = await getProvider();
-      const { data } = await supabase.from("containers").select("*").eq("provider_id", provider.id).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("containers").select("*").eq("provider_id", provider.id).order("departure_date", { ascending: false });
+      if (error) throw error;
       setItems(data ?? []);
     } catch {
       setNotice("Sign in with a Provider account to manage live containers.");
