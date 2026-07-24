@@ -1,10 +1,58 @@
 "use client";
+
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Bell, LayoutDashboard, PackageOpen, ShipWheel, UserRound, MessageCircle, LogOut, Send, X } from "lucide-react";
 import type { Role } from "@/lib/types";
-const nav = [{label:"Overview",icon:LayoutDashboard},{label:"Containers",icon:PackageOpen},{label:"Bookings",icon:ShipWheel},{label:"Messages",icon:MessageCircle}];
-export function AppShell({ role, children }: {role:Role; children:React.ReactNode}) { const label = role === "provider" ? "Provider Portal" : role === "admin" ? "Admin Console" : "Trader Dashboard"; const [active,setActive]=useState("Overview"); const [chat,setChat]=useState(false); const [text,setText]=useState(""); const [loading,setLoading]=useState(false); const [messages,setMessages]=useState([{from:"CargoGuide",body:`Welcome to CargoConnect. I can help you navigate this ${role} workspace, explain a booking, or answer questions about the platform.`,time:"Now"}]); const send=async (question=text)=>{if(!question.trim()||loading)return;setMessages(current=>[...current,{from:"You",body:question,time:"Now"}]);setText("");setLoading(true);try{const res=await fetch("/api/cargo-guide",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:question,role})});const data=await res.json() as {answer:string};setMessages(current=>[...current,{from:"CargoGuide",body:data.answer,time:"Now"}])}catch{setMessages(current=>[...current,{from:"CargoGuide",body:"I’m having trouble connecting right now. Try asking again in a moment.",time:"Now"}])}finally{setLoading(false)}}; return <div className="min-h-screen bg-[#f5f9fc] text-ink">
- <aside className="fixed inset-y-0 hidden w-64 flex-col border-r border-slate-200 bg-white px-5 py-7 lg:flex"><Link href="/" className="mb-12 flex items-center gap-3 font-bold text-navy"><span className="grid h-10 w-10 place-items-center rounded-xl bg-navy text-white"><ShipWheel size={22}/></span><span>Cargo<span className="text-sky">Connect</span></span></Link><p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[.18em] text-slate-400">{label}</p>{nav.map(n=><button onClick={()=>n.label==="Messages"?setChat(true):setActive(n.label)} key={n.label} className={`mb-1 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium ${active===n.label?"bg-sky/10 text-navy":"text-slate-500 hover:bg-slate-50"}`}><n.icon size={18}/>{n.label}{n.label==="Messages"&&<i className="ml-auto h-2 w-2 rounded-full bg-orange"/>}</button>)}<div className="mt-auto"><div className="mb-5 flex items-center gap-3 rounded-xl bg-slate-50 p-3"><span className="grid h-9 w-9 place-items-center rounded-full bg-orange text-xs font-bold text-white">{role[0].toUpperCase()}</span><div><p className="text-sm font-semibold capitalize">{role} user</p><p className="text-xs text-emerald-600">● Online</p></div></div><Link href="/" className="flex items-center gap-2 px-3 py-2 text-sm text-slate-500"><LogOut size={16}/> Sign out</Link></div></aside>
- <main className="lg:ml-64"><header className="flex h-20 items-center justify-between border-b border-slate-200 bg-white px-6 md:px-10"><div><p className="text-xs font-medium text-slate-400">Welcome back · {active}</p><h1 className="font-bold text-navy">{label}</h1></div><div className="flex items-center gap-4"><button onClick={()=>setChat(true)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100"><MessageCircle size={19}/></button><button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100"><Bell size={19}/><i className="absolute right-2 top-2 h-2 w-2 rounded-full bg-orange"/></button><span className="grid h-9 w-9 place-items-center rounded-full bg-navy text-white"><UserRound size={17}/></span></div></header><div className="p-6 md:p-10">{children}</div></main>
- {chat&&<div className="fixed bottom-5 right-5 z-50 flex h-[520px] w-[360px] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"><div className="flex items-center justify-between bg-navy p-5 text-white"><div><p className="font-bold">CargoGuide</p><p className="mt-1 text-xs text-sky">✦ Your CargoConnect assistant</p></div><button onClick={()=>setChat(false)}><X size={20}/></button></div><div className="flex flex-wrap gap-2 border-b bg-white p-3">{["How do I book space?","Explain containers","How do payments work?"].map(q=><button onClick={()=>send(q)} key={q} className="rounded-full bg-sky/10 px-3 py-1.5 text-[11px] font-semibold text-navy hover:bg-sky/20">{q}</button>)}</div><div className="flex-1 space-y-4 overflow-y-auto bg-slate-50 p-4">{messages.map((m,i)=><div key={i} className={`max-w-[88%] rounded-2xl p-3 text-sm ${m.from==="You"?"ml-auto bg-sky text-white":"bg-white text-slate-700 shadow-sm"}`}><p>{m.body}</p><p className={`mt-2 text-[10px] ${m.from==="You"?"text-white/70":"text-slate-400"}`}>{m.from} · {m.time}</p></div>)}{loading&&<div className="w-fit rounded-2xl bg-white px-4 py-3 text-xs font-medium text-slate-400 shadow-sm">CargoGuide is thinking…</div>}</div><div className="flex gap-2 border-t p-3"><input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Ask CargoGuide anything…" className="min-w-0 flex-1 rounded-xl bg-slate-100 px-3 text-sm outline-none"/><button onClick={()=>send()} className="rounded-xl bg-navy p-3 text-white"><Send size={16}/></button></div></div>}</div> }
+
+export type DashboardTab = "Overview" | "Containers" | "Bookings" | "Messages";
+
+const nav: { label: DashboardTab; icon: typeof LayoutDashboard }[] = [
+  { label: "Overview", icon: LayoutDashboard },
+  { label: "Containers", icon: PackageOpen },
+  { label: "Bookings", icon: ShipWheel },
+  { label: "Messages", icon: MessageCircle },
+];
+
+export function AppShell({ role, children }: { role: Role; children: ReactNode | ((tab: DashboardTab) => ReactNode) }) {
+  const label = role === "provider" ? "Provider Portal" : role === "admin" ? "Admin Console" : "Trader Dashboard";
+  const [active, setActive] = useState<DashboardTab>("Overview");
+  const [chat, setChat] = useState(false);
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState([{ from: "CargoGuide", body: `Welcome to CargoConnect. I can help you navigate this ${role} workspace, explain a booking, or answer questions about the platform.`, time: "Now" }]);
+
+  const selectTab = (tab: DashboardTab) => {
+    setActive(tab);
+    if (tab === "Messages") setChat(true);
+  };
+
+  const send = async (question = text) => {
+    if (!question.trim() || loading) return;
+    setMessages(current => [...current, { from: "You", body: question, time: "Now" }]);
+    setText("");
+    setLoading(true);
+    try {
+      const response = await fetch("/api/cargo-guide", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: question, role }) });
+      const data = await response.json() as { answer: string };
+      setMessages(current => [...current, { from: "CargoGuide", body: data.answer, time: "Now" }]);
+    } catch {
+      setMessages(current => [...current, { from: "CargoGuide", body: "I’m having trouble connecting right now. Try asking again in a moment.", time: "Now" }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const content = typeof children === "function" ? children(active) : children;
+
+  return <div className="min-h-screen bg-[#f5f9fc] text-ink">
+    <aside className="fixed inset-y-0 hidden w-64 flex-col border-r border-slate-200 bg-white px-5 py-7 lg:flex">
+      <Link href="/" className="mb-12 flex items-center gap-3 font-bold text-navy"><span className="grid h-10 w-10 place-items-center rounded-xl bg-navy text-white"><ShipWheel size={22} /></span><span>Cargo<span className="text-sky">Connect</span></span></Link>
+      <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[.18em] text-slate-400">{label}</p>
+      {nav.map(item => <button onClick={() => selectTab(item.label)} key={item.label} className={`mb-1 flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium ${active === item.label ? "bg-sky/10 text-navy" : "text-slate-500 hover:bg-slate-50"}`}><item.icon size={18} />{item.label}{item.label === "Messages" && <i className="ml-auto h-2 w-2 rounded-full bg-orange" />}</button>)}
+      <div className="mt-auto"><div className="mb-5 flex items-center gap-3 rounded-xl bg-slate-50 p-3"><span className="grid h-9 w-9 place-items-center rounded-full bg-orange text-xs font-bold text-white">{role[0].toUpperCase()}</span><div><p className="text-sm font-semibold capitalize">{role} user</p><p className="text-xs text-emerald-600">● Online</p></div></div><Link href="/" className="flex items-center gap-2 px-3 py-2 text-sm text-slate-500"><LogOut size={16} />Sign out</Link></div>
+    </aside>
+    <main className="lg:ml-64"><header className="flex h-20 items-center justify-between border-b border-slate-200 bg-white px-6 md:px-10"><div><p className="text-xs font-medium text-slate-400">Welcome back · {active}</p><h1 className="font-bold text-navy">{label}</h1></div><div className="flex items-center gap-4"><button onClick={() => { setActive("Messages"); setChat(true); }} className="rounded-full p-2 text-slate-500 hover:bg-slate-100"><MessageCircle size={19} /></button><button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100"><Bell size={19} /><i className="absolute right-2 top-2 h-2 w-2 rounded-full bg-orange" /></button><span className="grid h-9 w-9 place-items-center rounded-full bg-navy text-white"><UserRound size={17} /></span></div></header><div className="p-6 md:p-10">{content}</div></main>
+    {chat && <div className="fixed bottom-5 right-5 z-50 flex h-[520px] w-[360px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"><div className="flex items-center justify-between bg-navy p-5 text-white"><div><p className="font-bold">CargoGuide</p><p className="mt-1 text-xs text-sky">✦ Your CargoConnect assistant</p></div><button onClick={() => setChat(false)}><X size={20} /></button></div><div className="flex flex-wrap gap-2 border-b bg-white p-3">{["How do I book space?", "Explain containers", "How do payments work?"].map(question => <button onClick={() => send(question)} key={question} className="rounded-full bg-sky/10 px-3 py-1.5 text-[11px] font-semibold text-navy hover:bg-sky/20">{question}</button>)}</div><div className="flex-1 space-y-4 overflow-y-auto bg-slate-50 p-4">{messages.map((message, index) => <div key={index} className={`max-w-[88%] rounded-2xl p-3 text-sm ${message.from === "You" ? "ml-auto bg-sky text-white" : "bg-white text-slate-700 shadow-sm"}`}><p>{message.body}</p><p className={`mt-2 text-[10px] ${message.from === "You" ? "text-white/70" : "text-slate-400"}`}>{message.from} · {message.time}</p></div>)}{loading && <div className="w-fit rounded-2xl bg-white px-4 py-3 text-xs font-medium text-slate-400 shadow-sm">CargoGuide is thinking…</div>}</div><div className="flex gap-2 border-t p-3"><input value={text} onChange={event => setText(event.target.value)} onKeyDown={event => event.key === "Enter" && send()} placeholder="Ask CargoGuide anything…" className="min-w-0 flex-1 rounded-xl bg-slate-100 px-3 text-sm outline-none" /><button onClick={() => send()} className="rounded-xl bg-navy p-3 text-white"><Send size={16} /></button></div></div>}
+  </div>;
+}
